@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:stockproject/dashboard_screen.dart';
 import 'package:stockproject/login_screen.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:stockproject/salesperson/salespersonshop_dashboard.dart';
 import 'controllers/auth_controller.dart';
 
 void main() async {
@@ -25,7 +26,8 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/', page: () => LoginScreen()),
         GetPage(
             name: '/dashboard', page: () => DashboardScreen()), // Admin screen
-        GetPage(name: '/cashier', page: () => DashboardScreen()),
+        GetPage(
+            name: '/SalespersonShop', page: () => SalesPersonDashboardScreen()),
         GetPage(name: '/manager', page: () => DashboardScreen()),
       ],
     );

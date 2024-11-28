@@ -45,9 +45,9 @@ class AuthController extends GetxController {
                 '/dashboard',
               );
               break;
-            case 'Cashier':
+            case 'Salesperson Shop':
               Get.offNamed(
-                '/cashier',
+                '/SalespersonShop',
               );
               break;
             case 'Manager':
