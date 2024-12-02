@@ -4,6 +4,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:stockproject/widget/route.dart';
+
 class SchoolCreationPage extends StatefulWidget {
   @override
   _SchoolCreationPageState createState() => _SchoolCreationPageState();
@@ -11,7 +13,7 @@ class SchoolCreationPage extends StatefulWidget {
 
 class _SchoolCreationPageState extends State<SchoolCreationPage> {
   List schools = []; // Initialize school list
-  final String apiUrl = 'http://127.0.0.1:8000/api/school';
+  final String apiUrl = '$url/api/school';
 
   @override
   void initState() {

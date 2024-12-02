@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:stockproject/salesperson/items_salesperson.dart';
 import 'package:stockproject/school_screen.dart';
 import 'package:stockproject/stock_screen.dart';
+import 'package:stockproject/widget/route.dart';
 
 class SalesPersonDashboardScreen extends StatefulWidget {
   @override
@@ -29,7 +30,7 @@ class _SalesPersonDashboardScreenState
     final token = box.read('token'); // Retrieve the token from storage
     print(token);
     final response = await http.post(
-      Uri.parse('http://127.0.0.1:8000/api/logout'),
+      Uri.parse('$url/api/logout'),
       headers: {
         'Authorization': 'Bearer $token', // Send token for authentication
         'Content-Type': 'application/json',

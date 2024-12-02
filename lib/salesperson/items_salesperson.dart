@@ -4,6 +4,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:stockproject/widget/route.dart';
+
 class ItemSalesPerson extends StatefulWidget {
   @override
   _ItemSalesPersonState createState() => _ItemSalesPersonState();
@@ -12,7 +14,7 @@ class ItemSalesPerson extends StatefulWidget {
 class _ItemSalesPersonState extends State<ItemSalesPerson> {
   List selectedProducts = []; // Persistent cart
   double totalPrice = 0.0;
-  final String stockApiUrl = 'http://127.0.0.1:8000/api/stock?school_type=';
+  final String stockApiUrl = '$url/api/stock?school_type=';
 
   @override
   void initState() {

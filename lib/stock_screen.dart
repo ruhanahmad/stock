@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:stockproject/widget/route.dart';
 import 'package:stockproject/widgets/stock_enter.dart';
 import 'dart:convert';
 
@@ -14,7 +15,7 @@ class StockListPage extends StatefulWidget {
 
 class _StockListPageState extends State<StockListPage> {
   List stocks = [];
-  final String apiUrl = 'http://127.0.0.1:8000/api/stock';
+  final String apiUrl = '$url/api/stock';
 
   @override
   void initState() {

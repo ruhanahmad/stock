@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:stockproject/widget/route.dart';
 
 //final box = GetStorage();
 // var token = data['data']['token'];
@@ -19,7 +20,7 @@ class AuthController extends GetxController {
     isLoading.value = true; // Show loader
     try {
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/login'),
+        Uri.parse('$url/api/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );

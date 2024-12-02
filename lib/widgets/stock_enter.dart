@@ -4,6 +4,8 @@ import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:stockproject/widget/route.dart';
+
 class StockCreationPage extends StatefulWidget {
   final Function onStockAdded;
 
@@ -19,8 +21,8 @@ class _StockCreationPageState extends State<StockCreationPage> {
   final TextEditingController priceController = TextEditingController();
   final TextEditingController quantityController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
-  final String apiUrl = 'http://127.0.0.1:8000/api/stock';
-  final String schoolApiUrl = 'http://127.0.0.1:8000/api/school';
+  final String apiUrl = '$url/api/stock';
+  final String schoolApiUrl = '$url/api/school';
 
   String selectedType = 'Own Stock';
   String selectedCategory = 'Primary School';

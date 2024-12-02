@@ -3,9 +3,11 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:stockproject/widget/route.dart';
+
 class SchoolController extends GetxController {
   var schools = [].obs; // Observable list of schools
-  final String apiUrl = 'http://127.0.0.1:8000/api/school';
+  final String apiUrl = '$url/api/school';
 
   // Fetch all schools
   Future<void> fetchSchools() async {
