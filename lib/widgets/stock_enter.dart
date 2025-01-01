@@ -28,9 +28,11 @@ class _StockCreationPageState extends State<StockCreationPage> {
   String selectedCategory = 'Primary School';
   String? selectedSchoolId; // ID of the selected school
   List<Map<String, dynamic>> schools = []; // To store schools data
+  final box = GetStorage();
 
   Future<void> createStock(BuildContext context) async {
     final token = GetStorage().read('token');
+    final userId = GetStorage().read('users');
 
     final response = await http.post(
       Uri.parse(apiUrl),
@@ -47,6 +49,7 @@ class _StockCreationPageState extends State<StockCreationPage> {
         'price': priceController.text,
         'quantity': quantityController.text,
         'location': locationController.text,
+        'user_id': userId
       }),
     );
     print(response.body);

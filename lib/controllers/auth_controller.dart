@@ -32,11 +32,16 @@ class AuthController extends GetxController {
         // Extract role from response data
         var roles = data['data']['roles'];
         var token = data['data']['token'];
+        var users = data['data']['user']['id'];
 
+        // var roleId = data['data']['user']['id'];
         // Store the token in GetStorage
         box.write('token', token);
+        box.write('users', users);
+        // box.write('roleId', roleId);
         if (roles.isNotEmpty) {
           role.value = roles[0]['name']; // Assuming the first role is primary
+          // role.value = roles[0]['id'];
           print('User Role: ${role.value}');
 
           // Navigate based on the role

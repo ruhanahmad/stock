@@ -9,6 +9,7 @@ import 'controllers/auth_controller.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
+
   runApp(MyApp());
 }
 
@@ -16,6 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Role-Based Flutter Web App',
       theme: ThemeData(primarySwatch: Colors.blue),
       initialBinding: BindingsBuilder(() {
