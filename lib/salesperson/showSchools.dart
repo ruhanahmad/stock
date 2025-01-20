@@ -87,7 +87,7 @@ class ShowSchools extends GetView<salesPersonController> {
                             child: Container(
                               height: 3,
                               width: 30,
-                              color: Colors.black,
+                              child: Icon(Icons.arrow_back),
                             ),
                           )),
                       Expanded(

@@ -73,10 +73,10 @@ class ShowProducts extends GetView<salesPersonController> {
                   ),
                 ),
               ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('OK'),
-              ),
+              // ElevatedButton(
+              //   onPressed: () => Navigator.pop(context),
+              //   child: Text('OK'),
+              // ),
             ],
           ),
         ));

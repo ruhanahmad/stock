@@ -26,6 +26,7 @@ class _StockCreationPageState extends State<StockCreationPage> {
 
   String selectedType = 'Own Stock';
   String selectedCategory = 'Primary School';
+  String selectedLocation = 'Stock';
   String? selectedSchoolId; // ID of the selected school
   List<Map<String, dynamic>> schools = []; // To store schools data
   final box = GetStorage();
@@ -48,7 +49,7 @@ class _StockCreationPageState extends State<StockCreationPage> {
         'size': sizeController.text,
         'price': priceController.text,
         'quantity': quantityController.text,
-        'location': locationController.text,
+        'location': selectedLocation,
         'user_id': userId
       }),
     );
@@ -160,7 +161,17 @@ class _StockCreationPageState extends State<StockCreationPage> {
               SizedBox(height: 10),
               _buildTextField('Quantity', quantityController),
               SizedBox(height: 10),
-              _buildTextField('Location', locationController),
+              // _buildTextField('Location', locationController),
+              _buildBottomSheetField(
+                label: 'location',
+                value: selectedLocation,
+                options: ['Stock', 'on Road Stock'],
+                onSelected: (val) {
+                  setState(() {
+                    selectedLocation = val;
+                  });
+                },
+              ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
