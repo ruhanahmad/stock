@@ -4,6 +4,7 @@ import 'package:stockproject/login_screen.dart';
 import 'package:stockproject/role_dialog.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:stockproject/rolesScreen_main.dart';
 import 'package:stockproject/school_screen.dart';
 import 'package:stockproject/stock_screen.dart';
 import 'package:stockproject/widget/route.dart';
@@ -17,7 +18,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
   final List<Widget> _pages = [
     Center(child: Text("Dashboard Content")),
-    RoleScreen(),
+    RolesscreenMain(),
     SchoolCreationPage(),
     StockListPage(),
     //  RoleScreen(),
@@ -64,6 +65,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
         onTap: (index) => setState(() => _currentIndex = index),
         items: [
           BottomNavigationBarItem(

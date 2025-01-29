@@ -76,6 +76,133 @@ class _SchoolCreationPageState extends State<SchoolCreationPage> {
     await fetchSchools();
   }
 
+  Future<void> updateUser(int id, String name, String type) async {
+    final box = GetStorage();
+    String? token = box.read('token');
+    print(token);
+    print(id);
+    print(selectedType + "whyyyyyyyyyyyyyyyyy");
+    try {
+      final response = await http.put(
+        Uri.parse('$apiUrl/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode({
+          'name': name,
+          'type': selectedType,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print(response.body);
+        fetchSchools(); // Refresh the list after update
+      } else {
+        print('Error ${response.statusCode}: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
+  }
+
+  void _showUpdateDialog(Map<String, dynamic> user) {
+    print("$user + fadfsadas");
+    TextEditingController nameController =
+        TextEditingController(text: user['name']);
+    TextEditingController typeController =
+        TextEditingController(text: user['type']);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Update School'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: 'Name'),
+              ),
+              TextField(
+                enabled: false,
+                controller: typeController,
+                decoration: InputDecoration(labelText: 'type'),
+              ),
+              GestureDetector(
+                  onTap: () {
+                    _showTypeBottomSheet();
+                  },
+                  child: Container(
+                      height: 20,
+                      width: 200,
+                      color: Colors.black,
+                      child: Text(
+                        "Change School",
+                        style: TextStyle(color: Colors.white),
+                      )))
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                updateUser(user['id'], nameController.text, typeController.text
+                    // passwordController.text,
+                    );
+
+                print(nameController.text);
+                Navigator.of(context).pop();
+              },
+              child: Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteConfirmationDialog(int stockId) {
+    Get.defaultDialog(
+      title: "Confirm Deletion",
+      middleText: "Are you sure you want to delete this record?",
+      textConfirm: "Yes",
+      textCancel: "No",
+      confirmTextColor: Colors.white,
+      onConfirm: () async {
+        await _deleteStock(stockId);
+        Get.back(); // Close dialog
+        Navigator.pop(context);
+      },
+    );
+  }
+
+  Future<void> _deleteStock(int userId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$apiUrl/$userId'),
+        headers: {
+          'Authorization': 'Bearer ${GetStorage().read('token')}',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        Get.snackbar("Success", "Record deleted successfully");
+        fetchSchools(); // Refresh the list
+      } else {
+        Get.snackbar("Error", "Failed to delete record");
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Something went wrong");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -108,12 +235,15 @@ class _SchoolCreationPageState extends State<SchoolCreationPage> {
                   child: ElevatedButton(
                     onPressed: createSchool,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueGrey[700],
+                      backgroundColor: Colors.black,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    child: Text('Submit'),
+                    child: Text(
+                      'Submit',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
                 SizedBox(height: 20),
@@ -127,16 +257,62 @@ class _SchoolCreationPageState extends State<SchoolCreationPage> {
                             itemCount: schools.length,
                             itemBuilder: (context, index) {
                               var school = schools[index];
-                              return ListTile(
-                                title: Text(
-                                  school['name'],
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                subtitle: Text(
-                                  school['type'],
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white70,
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Card(
+                                  color: Colors.white, // White background
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  elevation: 4, // Adds a shadow effect
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Row(
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              school['name'],
+                                              style: TextStyle(
+                                                color:
+                                                    Colors.black, // Black text
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              school['type'],
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.normal,
+                                                color: Colors
+                                                    .black87, // Slightly dim black
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                                onPressed: () =>
+                                                    _showUpdateDialog(school),
+                                                icon: Icon(Icons.edit)),
+                                            SizedBox(
+                                              width: 10,
+                                            ),
+                                            IconButton(
+                                              onPressed: () =>
+                                                  _showDeleteConfirmationDialog(
+                                                      school['id']),
+                                              icon: Icon(Icons.delete,
+                                                  color: Colors.red),
+                                            )
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               );
@@ -183,6 +359,7 @@ class _SchoolCreationPageState extends State<SchoolCreationPage> {
                 setState(() {
                   selectedType = type;
                 });
+                print(selectedType);
                 Get.back();
               },
             );

@@ -3,6 +3,9 @@ import 'package:get/get.dart';
 import '../controllers/role_controller.dart';
 
 class RoleScreen extends StatefulWidget {
+  final Function onStockAdded;
+
+  RoleScreen({required this.onStockAdded});
   @override
   _RoleScreenState createState() => _RoleScreenState();
 }
