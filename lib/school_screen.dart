@@ -25,12 +25,13 @@ class _SchoolCreationPageState extends State<SchoolCreationPage> {
     final box = GetStorage(); // Access GetStorage
     String? token = box.read('token'); // Retrieve the stored token
 
+    print(token);
     try {
       final response = await http.get(
         Uri.parse(apiUrl),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token', // Add Bearer token to headers
+          'Authorization': 'Bearer $token',
         },
       );
 
@@ -60,20 +61,20 @@ class _SchoolCreationPageState extends State<SchoolCreationPage> {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'name': nameController.text,
-        'type': selectedType,
-      }),
+      body: jsonEncode(
+          {'name': nameController.text, 'type': selectedType, 'alias': "null"}),
     );
 
+    print(response.body);
+    print(response.statusCode);
     if (response.statusCode == 200) {
       Get.snackbar('Success', 'School created successfully');
-      fetchSchools(); // Refresh the school list after creation
+      fetchSchools();
       nameController.clear(); // Clear the form field
     } else {
       Get.snackbar('Error', 'Failed to create school');
     }
-    await fetchSchools();
+    // await fetchSchools();
   }
 
   Future<void> updateUser(int id, String name, String type) async {
@@ -251,7 +252,8 @@ class _SchoolCreationPageState extends State<SchoolCreationPage> {
                   child: Container(
                     height: 300,
                     child: schools.isEmpty
-                        ? Center(child: CircularProgressIndicator())
+                        ? Text('No schools available',
+                            style: TextStyle(color: Colors.white))
                         : ListView.builder(
                             // scrollDirection: Axis.vertical,
                             itemCount: schools.length,
