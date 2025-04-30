@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:stockproject/stockScreenFetch.dart';
 import 'package:stockproject/stock_edit.dart';
 import 'package:stockproject/widget/route.dart';
 import 'package:stockproject/widgets/stock_enter.dart';
@@ -44,6 +45,7 @@ class _StockListPageState extends State<StockListPage> {
         setState(() {
           // Update UI with fetched data
           schools = data['data']['schools'];
+          print(schools);
         });
       } else {
         Get.snackbar('Error', 'Failed to load schools');
@@ -130,56 +132,80 @@ class _StockListPageState extends State<StockListPage> {
                   var school = schools[index];
                   return Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Card(
-                      color: Colors.white, // White background
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 4, // Adds a shadow effect
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  school['name'],
-                                  style: TextStyle(
-                                    color: Colors.black, // Black text
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                StockScreen(schoolId: school['id']),
+                          ),
+                        );
+                      },
+                      child: Card(
+                        color: Colors.white, // White background
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 4, // Adds a shadow effect
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        school['id'].toString(),
+                                        style: TextStyle(
+                                          color: Colors.black, // Black text
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        school['name'],
+                                        style: TextStyle(
+                                          color: Colors.black, // Black text
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  school['type'],
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.normal,
-                                    color: Colors.black87, // Slightly dim black
+                                  SizedBox(height: 4),
+                                  Text(
+                                    school['type'],
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.normal,
+                                      color:
+                                          Colors.black87, // Slightly dim black
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            // Row(
-                            //   children: [
-                            //     IconButton(
-                            //         onPressed: () =>
-                            //             _showUpdateDialog(school),
-                            //         icon: Icon(Icons.edit)),
-                            //     SizedBox(
-                            //       width: 10,
-                            //     ),
-                            //     IconButton(
-                            //       onPressed: () =>
-                            //           _showDeleteConfirmationDialog(
-                            //               school['id']),
-                            //       icon: Icon(Icons.delete,
-                            //           color: Colors.red),
-                            //     )
-                            //   ],
-                            // ),
-                          ],
+                                ],
+                              ),
+                              // Row(
+                              //   children: [
+                              //     IconButton(
+                              //         onPressed: () =>
+                              //             _showUpdateDialog(school),
+                              //         icon: Icon(Icons.edit)),
+                              //     SizedBox(
+                              //       width: 10,
+                              //     ),
+                              //     IconButton(
+                              //       onPressed: () =>
+                              //           _showDeleteConfirmationDialog(
+                              //               school['id']),
+                              //       icon: Icon(Icons.delete,
+                              //           color: Colors.red),
+                              //     )
+                              //   ],
+                              // ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
