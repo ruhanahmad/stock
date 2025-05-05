@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 import 'package:stockproject/widget/route.dart';
 
@@ -17,23 +18,48 @@ class StockCreationPage extends StatefulWidget {
 
 class _StockCreationPageState extends State<StockCreationPage> {
   final TextEditingController productNameController = TextEditingController();
-  final TextEditingController sizeController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
   final TextEditingController quantityController = TextEditingController();
-  final TextEditingController locationController = TextEditingController();
   final String apiUrl = '$url/api/stock';
   final String schoolApiUrl = '$url/api/school';
+  final String roleUsersApiUrl = '$url/api/role-users'; // New API endpoint for role users
 
-  String selectedType = 'Own Stock';
-  String selectedCategory = 'Primary School';
+  List<String> selectedTypes = []; // Multiple stock types
+  List<String> selectedCategories = []; // Multiple categories
+  List<String> selectedSchoolIds = []; // Multiple school IDs
+  List<String> selectedSizes = []; // Multiple sizes
+  List<String> selectedAssignedTo = []; // Multiple assigned users
   String selectedLocation = 'Stock';
-  String? selectedSchoolId; // ID of the selected school
-  List<Map<String, dynamic>> schools = []; // To store schools data
+  DateTime? startDate;
+  DateTime? endDate;
+  List<Map<String, dynamic>> schools = [];
+  List<Map<String, dynamic>> roleUsers = []; // List of users with specific role
   final box = GetStorage();
 
   Future<void> createStock(BuildContext context) async {
     final token = GetStorage().read('token');
     final userId = GetStorage().read('users');
+
+    Map<String, dynamic> requestBody = {
+      'product_name': productNameController.text,
+      'category': selectedCategories,
+      'stock_types': selectedTypes,
+      'school_id': selectedSchoolIds,
+      'size': selectedSizes,
+      'price': priceController.text,
+      'quantity': quantityController.text,
+      'location': selectedLocation,
+      'user_id': userId
+    };
+
+    // Add additional fields if location is "on Road Stock"
+    if (selectedLocation == 'on Road Stock') {
+      requestBody.addAll({
+        'start_date': startDate?.toIso8601String(),
+        'end_date': endDate?.toIso8601String(),
+        'assigned_to': selectedAssignedTo,
+      });
+    }
 
     final response = await http.post(
       Uri.parse(apiUrl),
@@ -42,25 +68,14 @@ class _StockCreationPageState extends State<StockCreationPage> {
         'Content-Type': 'application/json',
         'accept': 'application/json',
       },
-      body: jsonEncode({
-        'product_name': productNameController.text,
-        'type': selectedType,
-        'category': selectedCategory,
-        'school_id': selectedSchoolId,
-        'size': sizeController.text,
-        'price': priceController.text,
-        'quantity': quantityController.text,
-        'location': selectedLocation,
-        'user_id': userId
-      }),
+      body: jsonEncode(requestBody),
     );
     print(response.body);
 
     if (response.statusCode == 200) {
-      print(response.statusCode);
       Get.snackbar('Success', 'Stock created successfully');
       widget.onStockAdded();
-      Navigator.pop(context); // Go back to the main page
+      Navigator.pop(context);
     } else {
       Get.snackbar('Error', 'Failed to create stock');
     }
@@ -86,29 +101,121 @@ class _StockCreationPageState extends State<StockCreationPage> {
     }
   }
 
+  Future<void> fetchRoleUsers() async {
+    final token = GetStorage().read('token');
+    final response = await http.get(
+      Uri.parse(roleUsersApiUrl),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        roleUsers = List<Map<String, dynamic>>.from(data['data']['users']);
+      });
+    } else {
+      Get.snackbar('Error', 'Failed to fetch users');
+    }
+  }
+
   void showSchoolSelectionSheet() async {
-    await fetchSchools(); // Fetch schools before displaying the sheet
-
-    List<Map<String, dynamic>> filteredSchools = schools
-        .where((school) =>
-            school['type'].toLowerCase() == selectedCategory.toLowerCase())
-        .toList();
-
+    await fetchSchools();
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        return ListView(
-          children: filteredSchools
-              .map((school) => ListTile(
-                    title: Text(school['name']),
-                    onTap: () {
-                      setState(() {
-                        selectedSchoolId = school['id'].toString();
-                      });
-                      Navigator.pop(context);
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Column(
+              children: [
+                AppBar(
+                  title: Text('Select Schools'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text('Done'),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: schools.length,
+                    itemBuilder: (context, index) {
+                      final school = schools[index];
+                      final isSelected = selectedSchoolIds.contains(school['id'].toString());
+                      return CheckboxListTile(
+                        title: Text(school['name']),
+                        value: isSelected,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            if (value == true) {
+                              selectedSchoolIds.add(school['id'].toString());
+                            } else {
+                              selectedSchoolIds.remove(school['id'].toString());
+                            }
+                          });
+                        },
+                      );
                     },
-                  ))
-              .toList(),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void showRoleUsersSelectionSheet() async {
+    await fetchRoleUsers();
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Column(
+              children: [
+                AppBar(
+                  title: Text('Select Users'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text('Done'),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: roleUsers.length,
+                    itemBuilder: (context, index) {
+                      final user = roleUsers[index];
+                      final isSelected = selectedAssignedTo.contains(user['id'].toString());
+                      return CheckboxListTile(
+                        title: Text(user['name']),
+                        value: isSelected,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            if (value == true) {
+                              selectedAssignedTo.add(user['id'].toString());
+                            } else {
+                              selectedAssignedTo.remove(user['id'].toString());
+                            }
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -132,52 +239,57 @@ class _StockCreationPageState extends State<StockCreationPage> {
             children: [
               _buildTextField('Product Name', productNameController),
               SizedBox(height: 10),
-              _buildBottomSheetField(
+              _buildMultiSelectionField(
                 label: 'Type',
-                value: selectedType,
+                selectedItems: selectedTypes,
                 options: ['Own Stock', 'Shared Stock'],
-                onSelected: (val) {
+                onSelectionChanged: (List<String> newSelection) {
                   setState(() {
-                    selectedType = val;
+                    selectedTypes = newSelection;
                   });
                 },
               ),
               SizedBox(height: 10),
-              _buildBottomSheetField(
+              _buildMultiSelectionField(
                 label: 'Category',
-                value: selectedCategory,
+                selectedItems: selectedCategories,
                 options: ['Primary School', 'Secondary School'],
-                onSelected: (val) {
+                onSelectionChanged: (List<String> newSelection) {
                   setState(() {
-                    selectedCategory = val;
+                    selectedCategories = newSelection;
                   });
                 },
               ),
               SizedBox(height: 10),
-              _buildSchoolIdField(),
+              _buildSchoolSelectionField(),
               SizedBox(height: 10),
-              _buildTextField('Size', sizeController),
+              _buildSizeSelectionField(),
               SizedBox(height: 10),
               _buildTextField('Price', priceController),
               SizedBox(height: 10),
               _buildTextField('Quantity', quantityController),
               SizedBox(height: 10),
-              // _buildTextField('Location', locationController),
-              _buildBottomSheetField(
-                label: 'location',
-                value: selectedLocation,
-                options: ['Stock', 'on Road Stock'],
-                onSelected: (val) {
+              _buildLocationField(),
+              if (selectedLocation == 'on Road Stock') ...[
+                SizedBox(height: 10),
+                _buildDateField('Start Date', startDate, (date) {
                   setState(() {
-                    selectedLocation = val;
+                    startDate = date;
                   });
-                },
-              ),
+                }),
+                SizedBox(height: 10),
+                _buildDateField('End Date', endDate, (date) {
+                  setState(() {
+                    endDate = date;
+                  });
+                }),
+                SizedBox(height: 10),
+                _buildAssignedToField(),
+              ],
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   createStock(context);
-                  print("bitton pressend");
                 },
                 child: Text('Submit'),
               ),
@@ -203,65 +315,237 @@ class _StockCreationPageState extends State<StockCreationPage> {
     );
   }
 
-  Widget _buildBottomSheetField({
+  Widget _buildMultiSelectionField({
     required String label,
-    required String value,
+    required List<String> selectedItems,
     required List<String> options,
-    required Function(String) onSelected,
+    required Function(List<String>) onSelectionChanged,
   }) {
-    return InkWell(
-      onTap: () {
-        showModalBottomSheet(
-          context: context,
-          builder: (context) {
-            return ListView(
-              children: options
-                  .map((option) => ListTile(
-                        title: Text(option),
-                        onTap: () {
-                          onSelected(option);
-                          Navigator.pop(context);
-                        },
-                      ))
-                  .toList(),
-            );
-          },
-        );
-      },
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(color: Colors.white),
         ),
-        child: Text(value),
-      ),
+        SizedBox(height: 8),
+        Wrap(
+          spacing: 8.0,
+          children: options.map((option) {
+            return FilterChip(
+              label: Text(option),
+              selected: selectedItems.contains(option),
+              onSelected: (bool selected) {
+                final newSelection = List<String>.from(selectedItems);
+                if (selected) {
+                  newSelection.add(option);
+                } else {
+                  newSelection.remove(option);
+                }
+                onSelectionChanged(newSelection);
+              },
+              backgroundColor: Colors.white,
+              selectedColor: Colors.blue,
+              checkmarkColor: Colors.white,
+              labelStyle: TextStyle(
+                color: selectedItems.contains(option) ? Colors.white : Colors.black,
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
-  Widget _buildSchoolIdField() {
-    return InkWell(
-      onTap: showSchoolSelectionSheet,
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: 'School',
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+  Widget _buildSchoolSelectionField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Schools',
+          style: TextStyle(color: Colors.white),
+        ),
+        SizedBox(height: 8),
+        InkWell(
+          onTap: showSchoolSelectionSheet,
+          child: Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    selectedSchoolIds.isEmpty
+                        ? 'Select Schools'
+                        : '${selectedSchoolIds.length} schools selected',
+                  ),
+                ),
+                Icon(Icons.arrow_drop_down),
+              ],
+            ),
           ),
         ),
-        // Show the name of the selected school
-        child: Text(
-          schools.firstWhere(
-            (school) => school['id'].toString() == selectedSchoolId,
-            orElse: () => {'name': 'Select School'},
-          )['name'],
+      ],
+    );
+  }
+
+  Widget _buildLocationField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Location',
+          style: TextStyle(color: Colors.white),
         ),
-      ),
+        SizedBox(height: 8),
+        Wrap(
+          spacing: 8.0,
+          children: ['Stock', 'on Road Stock'].map((location) {
+            return FilterChip(
+              label: Text(location),
+              selected: selectedLocation == location,
+              onSelected: (bool selected) {
+                if (selected) {
+                  setState(() {
+                    selectedLocation = location;
+                  });
+                }
+              },
+              backgroundColor: Colors.white,
+              selectedColor: Colors.blue,
+              checkmarkColor: Colors.white,
+              labelStyle: TextStyle(
+                color: selectedLocation == location ? Colors.white : Colors.black,
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDateField(String label, DateTime? date, Function(DateTime) onDateSelected) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(color: Colors.white),
+        ),
+        SizedBox(height: 8),
+        InkWell(
+          onTap: () async {
+            final selectedDate = await showDatePicker(
+              context: context,
+              initialDate: date ?? DateTime.now(),
+              firstDate: DateTime.now(),
+              lastDate: DateTime.now().add(Duration(days: 365)),
+            );
+            if (selectedDate != null) {
+              onDateSelected(selectedDate);
+            }
+          },
+          child: Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    date != null
+                        ? DateFormat('yyyy-MM-dd').format(date)
+                        : 'Select $label',
+                  ),
+                ),
+                Icon(Icons.calendar_today),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAssignedToField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Assign To',
+          style: TextStyle(color: Colors.white),
+        ),
+        SizedBox(height: 8),
+        InkWell(
+          onTap: showRoleUsersSelectionSheet,
+          child: Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    selectedAssignedTo.isEmpty
+                        ? 'Select Users'
+                        : '${selectedAssignedTo.length} users selected',
+                  ),
+                ),
+                Icon(Icons.arrow_drop_down),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSizeSelectionField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Size',
+          style: TextStyle(color: Colors.white),
+        ),
+        SizedBox(height: 8),
+        Wrap(
+          spacing: 8.0,
+          children: [
+            'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL', '5XL', '6XL'
+          ].map((size) {
+            return FilterChip(
+              label: Text(size),
+              selected: selectedSizes.contains(size),
+              onSelected: (bool selected) {
+                setState(() {
+                  if (selected) {
+                    selectedSizes.add(size);
+                  } else {
+                    selectedSizes.remove(size);
+                  }
+                });
+              },
+              backgroundColor: Colors.white,
+              selectedColor: Colors.blue,
+              checkmarkColor: Colors.white,
+              labelStyle: TextStyle(
+                color: selectedSizes.contains(size) ? Colors.white : Colors.black,
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }
