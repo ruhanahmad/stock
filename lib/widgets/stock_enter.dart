@@ -24,7 +24,7 @@ class _StockCreationPageState extends State<StockCreationPage> {
   final String schoolApiUrl = '$url/api/school';
   final String roleUsersApiUrl = '$url/api/role-users'; // New API endpoint for role users
 
-  List<String> selectedTypes = []; // Multiple stock types
+  String selectedType = 'Own Stock'; // Changed back to single selection
   List<String> selectedCategories = []; // Multiple categories
   List<String> selectedSchoolIds = []; // Multiple school IDs
   List<String> selectedSizes = []; // Multiple sizes
@@ -43,7 +43,7 @@ class _StockCreationPageState extends State<StockCreationPage> {
     Map<String, dynamic> requestBody = {
       'product_name': productNameController.text,
       'category': selectedCategories,
-      'stock_types': selectedTypes,
+      'stock_types': [selectedType], // Send as array but single value
       'school_id': selectedSchoolIds,
       'size': selectedSizes,
       'price': priceController.text,
@@ -123,6 +123,12 @@ class _StockCreationPageState extends State<StockCreationPage> {
 
   void showSchoolSelectionSheet() async {
     await fetchSchools();
+    
+    // Filter schools based on selected categories
+    List<Map<String, dynamic>> filteredSchools = schools.where((school) {
+      return selectedCategories.contains(school['type']);
+    }).toList();
+
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -142,26 +148,34 @@ class _StockCreationPageState extends State<StockCreationPage> {
                   ],
                 ),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: schools.length,
-                    itemBuilder: (context, index) {
-                      final school = schools[index];
-                      final isSelected = selectedSchoolIds.contains(school['id'].toString());
-                      return CheckboxListTile(
-                        title: Text(school['name']),
-                        value: isSelected,
-                        onChanged: (bool? value) {
-                          setState(() {
-                            if (value == true) {
-                              selectedSchoolIds.add(school['id'].toString());
-                            } else {
-                              selectedSchoolIds.remove(school['id'].toString());
-                            }
-                          });
-                        },
-                      );
-                    },
-                  ),
+                  child: filteredSchools.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No schools available for selected categories',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: filteredSchools.length,
+                          itemBuilder: (context, index) {
+                            final school = filteredSchools[index];
+                            final isSelected = selectedSchoolIds.contains(school['id'].toString());
+                            return CheckboxListTile(
+                              title: Text(school['name']),
+                              subtitle: Text(school['type']),
+                              value: isSelected,
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  if (value == true) {
+                                    selectedSchoolIds.add(school['id'].toString());
+                                  } else {
+                                    selectedSchoolIds.remove(school['id'].toString());
+                                  }
+                                });
+                              },
+                            );
+                          },
+                        ),
                 ),
               ],
             );
@@ -239,16 +253,7 @@ class _StockCreationPageState extends State<StockCreationPage> {
             children: [
               _buildTextField('Product Name', productNameController),
               SizedBox(height: 10),
-              _buildMultiSelectionField(
-                label: 'Type',
-                selectedItems: selectedTypes,
-                options: ['Own Stock', 'Shared Stock'],
-                onSelectionChanged: (List<String> newSelection) {
-                  setState(() {
-                    selectedTypes = newSelection;
-                  });
-                },
-              ),
+              _buildStockTypeField(),
               SizedBox(height: 10),
               _buildMultiSelectionField(
                 label: 'Category',
@@ -257,6 +262,8 @@ class _StockCreationPageState extends State<StockCreationPage> {
                 onSelectionChanged: (List<String> newSelection) {
                   setState(() {
                     selectedCategories = newSelection;
+                    // Clear selected schools when categories change
+                    selectedSchoolIds = [];
                   });
                 },
               ),
@@ -312,6 +319,53 @@ class _StockCreationPageState extends State<StockCreationPage> {
           borderRadius: BorderRadius.circular(10),
         ),
       ),
+    );
+  }
+
+  Widget _buildStockTypeField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Stock Type',
+          style: TextStyle(color: Colors.white),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            children: [
+              RadioListTile<String>(
+                title: Text('Own Stock'),
+                value: 'Own Stock',
+                groupValue: selectedType,
+                onChanged: (String? value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedType = value;
+                    });
+                  }
+                },
+              ),
+              RadioListTile<String>(
+                title: Text('Shared Stock'),
+                value: 'Shared Stock',
+                groupValue: selectedType,
+                onChanged: (String? value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedType = value;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
