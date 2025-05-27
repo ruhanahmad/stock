@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:stockproject/dashboard_screen.dart';
 import 'package:stockproject/login_screen.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:stockproject/salesperson/salesPerson_Mobile.dart';
 import 'package:stockproject/salesperson/salespersonshop_dashboard.dart';
 import 'controllers/auth_controller.dart';
 
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
             name: '/dashboard', page: () => DashboardScreen()), // Admin screen
         GetPage(
             name: '/SalespersonShop', page: () => SalesPersonDashboardScreen()),
+        GetPage(name: '/Salespersonmobile', page: () => SalesPersonMobile()),
         GetPage(name: '/manager', page: () => DashboardScreen()),
       ],
     );

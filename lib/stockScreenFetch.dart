@@ -24,18 +24,18 @@ class _StockScreenState extends State<StockScreen> {
 
   void fetchStock() async {
     final url = Uri.parse(
-        'https://metrogarments.metrogarments.mu/api/school-stock?school_id=${widget.schoolId}');
+        'https://metrogarments.metrogarments.mu/api/stocks-by-school?school_id=${widget.schoolId}');
+
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
 
       setState(() {
-        // Safely check if products is null
-        stockList =
-            jsonData['data'] != null && jsonData['data']['products'] != null
-                ? List.from(jsonData['data']['products'])
-                : [];
+        // Update to use stocks instead of products
+        stockList = jsonData['data'] != null && jsonData['data']['stocks'] != null
+            ? List.from(jsonData['data']['stocks'])
+            : [];
         isLoading = false;
       });
     } else {
@@ -57,10 +57,41 @@ class _StockScreenState extends State<StockScreen> {
               itemCount: stockList.length,
               itemBuilder: (context, index) {
                 final item = stockList[index];
-                return ListTile(
-                  title: Text(item['product_name']),
-                  subtitle: Text(
-                      "Category: ${item['category']}\nPrice: ${item['price']}"),
+                // Get stock types and categories
+                List<String> types = (item['stock_types'] as List)
+                    .map((type) => type['type_name'].toString())
+                    .toList();
+                List<String> categories = (item['stock_categories'] as List)
+                    .map((cat) => cat['category_name'].toString())
+                    .toList();
+                
+                return Card(
+                  margin: EdgeInsets.all(8.0),
+                  child: Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item['product_name'],
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text('Size: ${item['size']}'),
+                        Text('Quantity: ${item['quantity']}'),
+                        Text('Price: ${item['price']}'),
+                        Text('Location: ${item['location']}'),
+                        if (item['start_date'] != null && item['end_date'] != null)
+                          Text('Period: ${item['start_date']} to ${item['end_date']}'),
+                        SizedBox(height: 4),
+                        Text('Types: ${types.join(", ")}'),
+                        Text('Categories: ${categories.join(", ")}'),
+                      ],
+                    ),
+                  ),
                 );
               },
             ),

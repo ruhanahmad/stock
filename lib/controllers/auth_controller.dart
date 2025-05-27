@@ -42,7 +42,7 @@ class AuthController extends GetxController {
         if (roles.isNotEmpty) {
           role.value = roles[0]['name']; // Assuming the first role is primary
           // role.value = roles[0]['id'];
-          print('User Role: ${role.value}');
+          print('User Role:${role.value}');
 
           // Navigate based on the role
           switch (role.value) {
@@ -56,6 +56,12 @@ class AuthController extends GetxController {
                 '/SalespersonShop',
               );
               break;
+            case 'Salesperson mobile':
+              Get.offNamed(
+                '/Salespersonmobile',
+              );
+              break;
+
             case 'Manager':
               Get.offNamed(
                 '/manager',

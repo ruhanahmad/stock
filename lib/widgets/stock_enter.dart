@@ -22,7 +22,8 @@ class _StockCreationPageState extends State<StockCreationPage> {
   final TextEditingController quantityController = TextEditingController();
   final String apiUrl = '$url/api/stock';
   final String schoolApiUrl = '$url/api/school';
-  final String roleUsersApiUrl = '$url/api/role-users'; // New API endpoint for role users
+  final String roleUsersApiUrl =
+      '$url/api/salesperson-mobile-users'; // New API endpoint for role users
 
   String selectedType = 'Own Stock'; // Changed back to single selection
   List<String> selectedCategories = []; // Multiple categories
@@ -45,11 +46,11 @@ class _StockCreationPageState extends State<StockCreationPage> {
       'category': selectedCategories,
       'stock_types': [selectedType], // Send as array but single value
       'school_id': selectedSchoolIds,
-      'size': selectedSizes,
+      'size': selectedSizes, // Send all selected sizes as array
       'price': priceController.text,
       'quantity': quantityController.text,
       'location': selectedLocation,
-      'user_id': userId
+      'user_ids': ["2"]
     };
 
     // Add additional fields if location is "on Road Stock"
@@ -113,9 +114,13 @@ class _StockCreationPageState extends State<StockCreationPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      setState(() {
-        roleUsers = List<Map<String, dynamic>>.from(data['data']['users']);
-      });
+      if (data['status'] == true) {
+        setState(() {
+          roleUsers = List<Map<String, dynamic>>.from(data['data']['users']);
+        });
+      } else {
+        Get.snackbar('Error', data['message'] ?? 'Failed to fetch users');
+      }
     } else {
       Get.snackbar('Error', 'Failed to fetch users');
     }
@@ -123,7 +128,7 @@ class _StockCreationPageState extends State<StockCreationPage> {
 
   void showSchoolSelectionSheet() async {
     await fetchSchools();
-    
+
     // Filter schools based on selected categories
     List<Map<String, dynamic>> filteredSchools = schools.where((school) {
       return selectedCategories.contains(school['type']);
@@ -159,7 +164,8 @@ class _StockCreationPageState extends State<StockCreationPage> {
                           itemCount: filteredSchools.length,
                           itemBuilder: (context, index) {
                             final school = filteredSchools[index];
-                            final isSelected = selectedSchoolIds.contains(school['id'].toString());
+                            final isSelected = selectedSchoolIds
+                                .contains(school['id'].toString());
                             return CheckboxListTile(
                               title: Text(school['name']),
                               subtitle: Text(school['type']),
@@ -167,9 +173,11 @@ class _StockCreationPageState extends State<StockCreationPage> {
                               onChanged: (bool? value) {
                                 setState(() {
                                   if (value == true) {
-                                    selectedSchoolIds.add(school['id'].toString());
+                                    selectedSchoolIds
+                                        .add(school['id'].toString());
                                   } else {
-                                    selectedSchoolIds.remove(school['id'].toString());
+                                    selectedSchoolIds
+                                        .remove(school['id'].toString());
                                   }
                                 });
                               },
@@ -210,7 +218,8 @@ class _StockCreationPageState extends State<StockCreationPage> {
                     itemCount: roleUsers.length,
                     itemBuilder: (context, index) {
                       final user = roleUsers[index];
-                      final isSelected = selectedAssignedTo.contains(user['id'].toString());
+                      final isSelected =
+                          selectedAssignedTo.contains(user['id'].toString());
                       return CheckboxListTile(
                         title: Text(user['name']),
                         value: isSelected,
@@ -402,7 +411,9 @@ class _StockCreationPageState extends State<StockCreationPage> {
               selectedColor: Colors.blue,
               checkmarkColor: Colors.white,
               labelStyle: TextStyle(
-                color: selectedItems.contains(option) ? Colors.white : Colors.black,
+                color: selectedItems.contains(option)
+                    ? Colors.white
+                    : Colors.black,
               ),
             );
           }).toList(),
@@ -473,7 +484,8 @@ class _StockCreationPageState extends State<StockCreationPage> {
               selectedColor: Colors.blue,
               checkmarkColor: Colors.white,
               labelStyle: TextStyle(
-                color: selectedLocation == location ? Colors.white : Colors.black,
+                color:
+                    selectedLocation == location ? Colors.white : Colors.black,
               ),
             );
           }).toList(),
@@ -482,7 +494,8 @@ class _StockCreationPageState extends State<StockCreationPage> {
     );
   }
 
-  Widget _buildDateField(String label, DateTime? date, Function(DateTime) onDateSelected) {
+  Widget _buildDateField(
+      String label, DateTime? date, Function(DateTime) onDateSelected) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -576,7 +589,16 @@ class _StockCreationPageState extends State<StockCreationPage> {
         Wrap(
           spacing: 8.0,
           children: [
-            'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL', '5XL', '6XL'
+            'XS',
+            'S',
+            'M',
+            'L',
+            'XL',
+            'XXL',
+            'XXXL',
+            '4XL',
+            '5XL',
+            '6XL'
           ].map((size) {
             return FilterChip(
               label: Text(size),
@@ -594,7 +616,8 @@ class _StockCreationPageState extends State<StockCreationPage> {
               selectedColor: Colors.blue,
               checkmarkColor: Colors.white,
               labelStyle: TextStyle(
-                color: selectedSizes.contains(size) ? Colors.white : Colors.black,
+                color:
+                    selectedSizes.contains(size) ? Colors.white : Colors.black,
               ),
             );
           }).toList(),

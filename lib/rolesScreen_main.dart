@@ -16,11 +16,41 @@ class RolesscreenMain extends StatefulWidget {
 class _RolesscreenMainState extends State<RolesscreenMain> {
   List stocks = [];
   final String apiUrl = '$url/api/users';
+  final String apiUrl2 = '$url/api/stocks-by-school?school_id=1';
 
   @override
   void initState() {
     super.initState();
     fetchUsers();
+  }
+
+  Future<void> fetchUserss() async {
+    final box = GetStorage();
+    String? token = box.read('token');
+
+    try {
+      final response = await http.get(
+        Uri.parse(apiUrl2),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        print(data);
+        // setState(() {
+        //   stocks = data['data']['users'] ?? [];
+
+        //   // print(stocks);
+        // });
+      } else {
+        print('Error ${response.statusCode}: ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
   }
 
   Future<void> fetchUsers() async {
@@ -38,8 +68,11 @@ class _RolesscreenMainState extends State<RolesscreenMain> {
 
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
+        // print(data);
         setState(() {
           stocks = data['data']['users'] ?? [];
+
+          // print(stocks);
         });
       } else {
         print('Error ${response.statusCode}: ${response.reasonPhrase}');
